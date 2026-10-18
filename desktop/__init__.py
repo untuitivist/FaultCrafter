@@ -1,0 +1,1 @@
+"""FaultCrafter desktop application."""

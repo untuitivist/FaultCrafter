@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>接入我的设备 · FaultCrafter</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f2f5f3;color:#183b3a;font:16px/1.65 system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:28px 22px 70px}header{display:flex;align-items:center;justify-content:space-between;gap:20px}h1{font-size:28px;margin-bottom:4px}h2{font-size:20px;margin:0 0 12px}a{color:#14635b}section{background:white;border:1px solid #d7e2dd;border-radius:14px;padding:24px;margin-top:22px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}label{display:block;font-size:14px}input,select,textarea,button{font:inherit}input,select,textarea{display:block;width:100%;margin-top:5px;padding:9px;border:1px solid #bbcfc5;border-radius:7px;background:#fff;color:#163e35}textarea{height:180px;font:13px/1.6 ui-monospace,monospace}button,.action{border:0;border-radius:7px;background:#20695d;color:white;padding:11px 18px;text-decoration:none;cursor:pointer;display:inline-block}button:disabled{opacity:.45;cursor:default}p{margin:8px 0}.muted{color:#60736c;font-size:14px}.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f6f3;padding:16px;border-radius:8px;font:14px/1.7 system-ui}progress{width:100%;height:16px}details{margin-top:16px}[hidden]{display:none!important}@media(max-width:720px){.grid{grid-template-columns:1fr}header{align-items:start}section{padding:18px}}
+  </style>
+</head>
+<body><main>
+  <header><div><h1>接入我的设备</h1><p class="muted">上传已有工况，训练设备LoRA，再输入新工况生成信号。</p></div><a href="/">返回信号工作台</a></header>
+  <p id="model" class="muted">正在读取发布模型…</p>
+  <section><h2>1. 描述这一路信号</h2>
+    <p class="muted">每个设备、测点和通道分别接入。固定工况会随设备保存；未填写的物理量表示未知。</p>
+    <div class="grid">
+      <label>设备标识（英文、数字或下划线）<input id="device" value="my_bearing_rig"></label>
+      <label>数据集名称<input id="dataset" value="my_dataset"></label>
+      <label>测点<input id="sensor" value="bearing_housing"></label>
+      <label>通道名<input id="channel" value="vibration_1"></label>
+      <label>采样率（Hz）<input id="rate" type="number" min="1" value="64000"></label>
+      <label>振动幅值单位<select id="unit"><option value="source_not_declared">原数据未声明</option value="g">g</option><option value="m/s2">m/s²</option><option value="V">V</option></select></label>
+      <label>实际轴转速单位<select id="speed"><option value="shaft_speed_rpm">rpm</option><option value="shaft_speed_hz">Hz</option></select></label>
+      <label>第二个可变工况<select id="load"><option value="radial_force_n">径向力（N）</option><option value="lateral_load_n">横向力（N）</option><option value="shaft_torque_nm">轴扭矩（Nm）</option><option value="motor_load_w">标注载荷功率（W）</option><option value="">没有第二个工况</option></select></label>
+      <label>固定轴扭矩（Nm，可留空）<input id="torque" type="number" step="any" placeholder="未知则留空"></label>
+    </div>
+    <p class="muted">使用声明采样率和样本顺序。文件中的不规则时间戳不会自动重采样。</p>
+  </section>
+  <section><h2>2. 上传独立采集记录</h2>
+    <p>选择信号文件，再填写每个文件的故障、用途和工况。</p>
+    <label>单通道文件：NPY、NPZ、CSV或MAT<input id="files" type="file" multiple accept=".npy,.npz,.csv,.mat"></label>
+    <p class="muted">CSV为无表头单列信号；NPZ/MAT可包含signal数组，MAT也支持按通道名查找Y结构。每条记录至少16384点。不要上传本次要检验的未见工况记录。</p>
+    <label>记录清单（CSV）<textarea id="records" spellcheck="false" placeholder="file,fault,split,speed,load&#10;normal_train.npy,normal,train,1500,1000&#10;normal_validation.npy,normal,validation,1500,1000"></textarea></label>
+    <p class="muted">故障：normal正常、inner_race内圈、outer_race外圈、rolling_element滚动体、cage保持架。用途：train训练、validation验证。同一故障和工况需要不同采集记录分别用于训练与验证；文件不能切开后充当独立记录。</p>
+    <details><summary>已有完整JSON清单</summary><label>导入清单（覆盖上面的表单描述）<input id="manifest" type="file" accept=".json"></label></details>
+    <div class="actions"><button id="upload">上传并校验</button><span id="upload-status" role="status"></span></div>
+  </section>
+  <section><h2>3. 训练并使用</h2>
+    <p class="muted">32共享主干和已有设备保持冻结，只训练本设备LoRA。支持上述五种故障语义；复用发布模型的冻结故障身份。新设备生成效果需要独立验证。</p>
+    <div class="actions"><button id="train" disabled>开始5000步训练</button><button id="refresh">读取已有任务</button><select id="jobs" aria-label="已有任务"><option value="">选择任务</option></select></div>
+    <progress id="progress" max="5000" value="0"></progress><pre id="status" aria-live="polite">等待上传与校验。</pre>
+    <div class="actions"><a id="generate" class="action" hidden>用我的设备生成</a><a id="download" hidden>下载设备模型包</a></div>
+  </section>
+</main><script src="/device-onboarding.js"></script></body></html>

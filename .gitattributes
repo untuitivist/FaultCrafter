@@ -1,0 +1,21 @@
+* text=auto eol=lf
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.pdf binary
+*.zip binary
+*.npz binary
+*.npy binary
+*.pt binary
+*.pth binary
+*.ckpt binary
+
+# Preserve the serialized bytes used by these frozen studies' SHA256 audits.
+results/architecture_time_weighting_20261005/** -text whitespace=cr-at-eol
+results/real_source_architecture_probe_20261005/** -text whitespace=cr-at-eol
+results/source_single_pass_pilot_20261005/** -text whitespace=cr-at-eol
+research/legacy/** -text whitespace=cr-at-eol
+research/notes/** -text whitespace=cr-at-eol
+results/experiment32_negative_gain_diagnosis_20261005/** -text whitespace=cr-at-eol

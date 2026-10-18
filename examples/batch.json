@@ -1,0 +1,12 @@
+{
+  "device_id": "bjtu_rao_bogie",
+  "fault_ids": ["normal"],
+  "conditions": [
+    {
+      "condition_parameters": {"drive_frequency_hz": 40.0, "lateral_load_kn": 0.0},
+      "condition_units": {"drive_frequency_hz": "Hz", "lateral_load_kn": "kN"},
+      "length": 4096,
+      "count": 4
+    }
+  ]
+}

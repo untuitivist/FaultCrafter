@@ -22,6 +22,7 @@ BLOCKED_PARTS = frozenset({
     "archives", "deliverables", "references", "third_party", "outputs", "results", "user_data",
 })
 MAXIMUM_FILE_BYTES = 5 * 1024 * 1024
+RESEARCH_TEST_FILES = frozenset({"tests/test_comparison_training.py"})
 
 
 def source_files(root: Path) -> list[Path]:
@@ -33,6 +34,8 @@ def source_files(root: Path) -> list[Path]:
     verified = []
     for path in sorted(selected):
         relative = path.relative_to(root)
+        if relative.as_posix() in RESEARCH_TEST_FILES:
+            continue
         if BLOCKED_PARTS.intersection(relative.parts):
             continue
         if not path.is_file():

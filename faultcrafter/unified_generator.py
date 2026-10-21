@@ -13,7 +13,7 @@ from faultcrafter.fault_composition import embed_fault_condition, validate_fault
 from faultcrafter.identity_guidance import IDENTITY_GUIDANCE_MODES, cap_guidance_rms, project_unit_peak
 from faultcrafter.time_guidance import CONSTANT_GUIDANCE, TIME_GUIDANCE_SCHEDULES, scheduled_guidance_weight
 from faultcrafter.training_numerics import decoder_linear_resize
-from faultcrafter.physical_reference import KNOWN_MECHANICAL_REFERENCE, LEGACY_CYCLIC_REFERENCE, resolve_physical_reference, validate_reference_policy
+from faultcrafter.physical_reference import LEGACY_CYCLIC_REFERENCE, resolve_physical_reference, validate_reference_policy
 
 
 def _group_count(channels: int) -> int:
@@ -2026,7 +2026,7 @@ class UnifiedSignalGenerator(nn.Module):
         self.num_fault_groups = num_fault_groups
         self.condition_dimension = condition_dimension
         self.physics_reference_policy = validate_reference_policy(physics_reference_policy, condition_dimension)
-        if self.physics_reference_policy == KNOWN_MECHANICAL_REFERENCE and style_mechanism != "legacy_affine":
+        if self.physics_reference_policy != LEGACY_CYCLIC_REFERENCE and style_mechanism != "legacy_affine":
             raise ValueError("known mechanical reference currently requires legacy_affine attention")
         self.num_devices = num_devices
         self.context_dimension = context_dimension
@@ -2652,7 +2652,7 @@ class UnifiedSignalGenerator(nn.Module):
             ("sample rate", sample_rate_hz),
             ("normalization length", normalization_length),
         ):
-            if name == "shaft speed" and self.physics_reference_policy == KNOWN_MECHANICAL_REFERENCE:
+            if name == "shaft speed" and self.physics_reference_policy != LEGACY_CYCLIC_REFERENCE:
                 if value.shape != (batch_size,) or not torch.isfinite(value).all():
                     raise ValueError("shaft reference must be finite with shape [batch]")
                 continue
@@ -2766,7 +2766,7 @@ class UnifiedSignalGenerator(nn.Module):
                 device_id,
                 shaft_speed_hz,
                 sample_rate_hz,
-                **({"allow_nonpositive_shaft_reference": True} if self.physics_reference_policy == KNOWN_MECHANICAL_REFERENCE else {}),
+                **({"allow_nonpositive_shaft_reference": True} if self.physics_reference_policy != LEGACY_CYCLIC_REFERENCE else {}),
             )
         up_1 = decoder_linear_resize(middle, encoded_1.shape[-1])
         decoded_1 = self.decoder_1(

@@ -11,7 +11,8 @@ from faultcrafter.typed_conditions import TYPED_CONDITION_PROTOCOL, TYPED_DIMENS
 
 LEGACY_CYCLIC_REFERENCE = "legacy_cyclic"
 KNOWN_MECHANICAL_REFERENCE = "known_mechanical_only"
-PHYSICS_REFERENCE_POLICIES = frozenset({LEGACY_CYCLIC_REFERENCE, KNOWN_MECHANICAL_REFERENCE})
+MASKED_MECHANICAL_REFERENCE = "seven_field_mechanical_only"
+PHYSICS_REFERENCE_POLICIES = frozenset({LEGACY_CYCLIC_REFERENCE, KNOWN_MECHANICAL_REFERENCE, MASKED_MECHANICAL_REFERENCE})
 MECHANICAL_ANGLE_COORDINATE = "theta = 2*pi*shaft_speed_hz*t only when shaft_frequency_present=1; otherwise no shaft-angle prior"
 
 
@@ -20,6 +21,8 @@ def validate_reference_policy(policy: str, condition_dimension: int) -> str:
         raise ValueError("unknown physical reference policy")
     if policy == KNOWN_MECHANICAL_REFERENCE and condition_dimension != TYPED_DIMENSION:
         raise ValueError("known mechanical reference requires the eight typed condition coordinates")
+    if policy == MASKED_MECHANICAL_REFERENCE and condition_dimension != 14:
+        raise ValueError("seven-field reference requires seven values and seven presence masks")
     return policy
 
 
@@ -37,15 +40,16 @@ def resolve_physical_reference(
     if policy == LEGACY_CYCLIC_REFERENCE:
         return cyclic_reference_hz, None
     if parameters.ndim != 2 or cyclic_reference_hz.shape != (len(parameters),):
-        raise ValueError("physical reference requires [batch,8] conditions and [batch] Hz")
+        raise ValueError("physical reference requires batched conditions and [batch] Hz")
     if not parameters.dtype.is_floating_point or not cyclic_reference_hz.dtype.is_floating_point or parameters.device != cyclic_reference_hz.device:
         raise ValueError("physical reference conditions and Hz need floating tensors on the same device")
     if not torch.isfinite(parameters).all() or not torch.isfinite(cyclic_reference_hz).all():
         raise ValueError("physical reference inputs must be finite")
-    masks = parameters[:, 4:]
+    mask_offset = 7 if policy == MASKED_MECHANICAL_REFERENCE else 4
+    masks = parameters[:, mask_offset:]
     if not ((masks == 0) | (masks == 1)).all():
         raise ValueError("typed presence masks must be independent binary values")
-    present = parameters[:, 4] == 1
+    present = parameters[:, mask_offset] == 1
     comparison_dtype = torch.promote_types(parameters.dtype, cyclic_reference_hz.dtype)
     expected = parameters[:, 0].to(comparison_dtype) * FIXED_PHYSICAL_SCALES["shaft_frequency"]
     tolerance = 16 * max(torch.finfo(parameters.dtype).eps, torch.finfo(cyclic_reference_hz.dtype).eps, torch.finfo(torch.float32).eps)

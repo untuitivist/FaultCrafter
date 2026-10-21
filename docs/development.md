@@ -1,5 +1,7 @@
 # Development and distribution
 
+`faultcrafter.method_model.MethodGenerator` exposes the release32 backbone for fresh held-out research training. Its condition vector contains seven physical fields and seven independent presence masks, followed by device, channel, atomic fault indicators and sample rate. `load_method` accepts only explicitly eligible benchmark checkpoints; deployment packages are separate. LoRA adaptation updates new-route low-rank slices and new-device label rows while restoring every frozen parameter after AdamW and EMA. The independent [experiment repository](https://github.com/untuitivist/FaultCrafter-experiments) provides the training queue, data isolation audit and T1–T4 evaluation; these comparison modules do not belong in the method package.
+
 Install the `training` and `dev` extras. The current product checks exercise input units, masks, signal analysis, compact-model identity, shared CLI/GUI behavior and device upload isolation:
 
 ```console

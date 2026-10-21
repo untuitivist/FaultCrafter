@@ -39,6 +39,8 @@ The examples use the BJTU route in the full-data release32 package. Inspect your
 
 The public code repository excludes raw datasets, weights, user uploads, experiment outputs, manuscripts and Agent notes. The local research workspace and paper are maintained separately.
 
+Comparison experiments, baseline implementations and evaluation scripts are available in the separate public [FaultCrafter-experiments repository](https://github.com/untuitivist/FaultCrafter-experiments).
+
 ## Documentation
 
 - [Usage and new-device adaptation](docs/usage.md)
